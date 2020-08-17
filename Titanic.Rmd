@@ -1,0 +1,432 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+#Working with data about Titanic
+#Loading packages
+library(readxl)
+library(dplyr)
+library(ggplot2)
+library(gplots)
+library(rpart)
+library(rpart.plot)
+library(plyr)
+```
+```{r}
+#Import data
+data <- read_excel('titanic_data.xlsx')
+```
+
+```{r}
+#Display all variables names
+names(data)
+#PassengeId - Passenger identifier
+#Survived or not- 0(died), 1 (Survived)
+#Pclass passenger travelling in which class- 1- the best class, 2- medium, 3 -worst
+#name - name and surname of passenger
+#sex - sex of passenger (male, female)
+#age - age of passenger
+#Sibsp -no of siblings/spouses on titanic
+#Parch - No of parents/children
+# Ticket - ticket no
+#Fare - cost of ticket
+#Cabin - cabin no
+#Embarked - name of port in which passenger boarded on Titanic(Q- Queenstown, S- Southampton, C- Cherbourg)
+```
+```{r}
+#Creating new variables with appropriate variants
+data$survival <- factor(data$Survived,
+                        levels = c(0,1),
+                        labels = c('died', 'survived'))
+data$class <- factor(data$Pclass, 
+                     levels = c(1,2,3),
+                     labels =c('Best','Medium', 'Worst'))
+data$embarked <- factor(data$Embarked, 
+                        level =c('S', 'Q', 'C'),
+                        labels = c('Southampton', 'Queenstown', 'Cherbourg'))
+
+                     
+```
+```{r}
+#Visualisation of results in form of charts
+#Distribution of passengers by survival
+
+ggplot(data)+
+  geom_bar(aes(survival))+
+             theme_bw()+
+             labs(x ='Has the passenger survived',
+                  y = 'The no. of passengers')
+
+table(data$survival)
+prop.table(table(data$survival))
+```
+```{r}
+#Find dist of passengers by sex, by port, by class
+ggplot(data)+
+  geom_bar(aes(Sex))+
+             theme_bw()+
+             labs(x ='Sex',
+                  y = 'No of passengers')
+
+table(data$Sex)
+prop.table(table(data$Sex))
+
+
+
+ggplot(data)+
+  geom_bar(aes(embarked))+
+             theme_bw()+
+             labs(x ='Port',
+                  y = 'No of passengers')
+
+table(data$embarked)
+prop.table(table(data$embarked))
+
+
+
+
+ggplot(data)+
+  geom_bar(aes(class))+
+             theme_bw()+
+             labs(x ='Class',
+                  y = 'No of passengers')
+
+table(data$class)
+prop.table(table(data$class))
+
+```
+
+```{r}
+# Visualization of results in the form of charts
+# The distribution of passengers by survival
+
+ 
+
+ggplot(data) +
+  geom_bar(aes(survival)) +
+  theme_bw()+
+  labs(x='Has the passenger survived?',
+       y='The number of passengers')
+
+ 
+
+prop.table(table(data$survival))
+
+ 
+
+# The distribution of passengers by sex
+
+ 
+
+
+ggplot(data)+
+  geom_bar(aes(x=Sex), width=0.7, fill="steelblue")+
+  theme_bw()+
+  labs(x='Sex',y='The number of passengers',
+       title='The distribution of passengers by sex')
+
+ 
+
+# The distribution of passengers by port
+
+ 
+
+data %>% filter(!is.na(embarked)) %>%
+  ggplot(., aes(x=embarked))+
+  geom_bar(stat="count", width=0.7, fill="steelblue")+
+  theme_bw()+
+  labs(x='Port',y='The number of passengers',
+       title='The distribution of passengers by port')
+
+ 
+
+# The distribution of passengers by class
+
+ 
+
+ggplot(data, aes(x=class))+
+  geom_bar(stat="count", width=0.7, fill="steelblue")+
+  theme_bw()+
+  labs(x='Cabin class',y='The number of passengers',
+       title='The distribution of passengers by class')
+```
+```{r}
+
+
+
+# Boxplot for survival
+
+ 
+
+data %>% filter(!is.na(Age)) %>%
+  ggplot(., aes(x = survival, y = Age)) +
+  geom_boxplot(fill = 'red',
+               alpha = 0.7) +
+  scale_y_continuous(name = "The age of passengers",
+                     breaks = seq(0, 100, 10),
+                     limits=c(0, 100)) +
+  scale_x_discrete(name = "Has the passenger survived?") +
+  ggtitle(" ") +
+  theme_bw()
+
+ 
+
+
+# Boxplot of age by sex
+
+ 
+
+
+data %>% filter(!is.na(Age)) %>%
+  ggplot(., aes(x = Sex, y = Age)) +
+  geom_boxplot(fill = 'red',
+               alpha = 0.7) +
+  scale_y_continuous(name = "The age of passengers",
+                     breaks = seq(0, 100, 10),
+                     limits=c(0, 100)) +
+  scale_x_discrete(name = "Sex") +
+  ggtitle(" ") +
+  theme_bw()
+
+ 
+
+# Boxplot of age by port
+
+ 
+
+data %>% filter(embarked %in% c('Southampton','Queenstown','Cherbourg')
+                & !is.na(Age)) %>%
+  ggplot(., aes(x = embarked, y = Age)) +
+  geom_boxplot(fill = 'red',
+               alpha = 0.7) +
+  scale_y_continuous(name = "The age of passengers",
+                     breaks = seq(0, 100, 10),
+                     limits=c(0, 100)) +
+  scale_x_discrete(name = "Port") +
+  ggtitle(" ") +
+  theme_bw()
+
+ 
+
+# Boxplot for age by sex and survival
+
+ 
+
+
+data %>% filter(!is.na(Age)) %>%
+  ggplot(., aes(x = Sex, y = Age)) +
+  geom_boxplot(fill = 'red',
+               alpha = 0.7) +
+  scale_y_continuous(name = "The age of passengers",
+                     breaks = seq(0, 100, 10),
+                     limits=c(0, 100)) +
+  scale_x_discrete(name = "Sex") +
+  ggtitle(" ") +
+  theme_bw() + facet_grid(. ~survival)
+
+ 
+
+# Boxplot for fare by survival
+
+ 
+
+data %>% filter(!is.na(Fare)) %>%
+  ggplot(., aes(x = survival, y = Fare)) +
+  geom_boxplot(fill = 'red',
+               alpha = 0.7) +
+  scale_y_continuous(name = "Fare",
+                     breaks = seq(0, 550, 50),
+                     limits=c(0, 550)) +
+  scale_x_discrete(name = "Has the passenger survived?") +
+  ggtitle(" ") +
+  theme_bw()
+
+ 
+
+# Boxplot for fare by survival and sex
+
+ 
+
+
+data %>% filter(!is.na(Fare)) %>%
+  ggplot(., aes(x = survival, y = Fare)) +
+  geom_boxplot(fill = 'red',
+               alpha = 0.7) +
+  scale_y_continuous(name = "Fare",
+                     breaks = seq(0, 550, 50),
+                     limits=c(0, 550)) +
+  scale_x_discrete(name = "Has the passenger survived?") +
+  ggtitle(" ") +
+  theme_bw()+facet_grid(~Sex)
+
+```
+
+```{r}
+# Chi-square test of independency
+
+ 
+
+# Dependency between sex and survival
+
+#HO - Sex & Survival are independent
+#H1 - Not independent
+
+(tabela1 <- table(data$Sex,data$survival))
+
+chisq.test(tabela1)
+
+ 
+
+ggplot(data, aes(x = Sex)) +
+
+  geom_bar(aes(fill = survival), position = 'fill')+
+
+  theme_bw()+
+
+  labs(x='Sex',y='Percentage of passengers')+
+
+  scale_fill_discrete(name="Has the passenger survived?")
+
+############################################################################
+
+ 
+
+############################################################################
+
+# Dependency between class and survival
+
+ 
+
+(tabela2 <- table(data$class,data$survival))
+
+chisq.test(tabela2)
+
+ 
+
+ggplot(data, aes(x = class)) +
+
+  geom_bar(aes(fill = survival), position = 'fill')+
+
+  theme_bw()+
+
+  labs(x='Cabin class',y='Percentage of passengers')+
+
+  scale_fill_discrete(name="Has the passenger survived?")
+
+############################################################################
+
+ 
+
+############################################################################
+
+ 
+
+# Dependency between port and survival
+
+ 
+
+(tabela3 <- table(data$embarked,data$survival))
+
+chisq.test(tabela3)
+
+ 
+
+data %>% filter(!is.na(embarked)) %>%
+
+  ggplot(., aes(x = embarked)) +
+
+  geom_bar(aes(fill = survival), position = 'fill')+
+
+  theme_bw()+
+
+  labs(x='Port',y='Percentage of passengers')+
+
+  scale_fill_discrete(name="Has the passenger survived?")
+
+ 
+
+############################################################################
+
+ 
+
+############################################################################
+
+# Dependency between fare and survival
+
+#HO: m1 = m2 =.. mk
+#H1: atleast 2 means are different
+# Analysis of variance in R
+#HO m1 =m2
+#H1 m1 is not equal to m2
+
+aov_fare <- aov(Fare~survival,data)
+
+summary(aov_fare)
+
+# Test Tukey
+
+TukeyHSD(aov_fare)
+
+# Plot
+
+plotmeans(data$Fare~data$survival,
+
+          xlab="Has the passenger survived?",
+
+          ylab="Fare",
+
+          main=" ")
+
+# Plot in ggplot2
+
+result <- ddply(data,'survival',dplyr::summarize,
+
+               fare.mean=mean(Fare),
+
+               fare.sd=sd(Fare),
+
+               length=NROW(Fare),
+
+               tkr=qt(p=0.90,df=length-1),
+
+               L=fare.mean-tkr*fare.sd/sqrt(length),
+
+               U=fare.mean+tkr*fare.sd/sqrt(length))
+
+ 
+
+ggplot(result,aes(x=fare.mean,y=survival)) + geom_point() +
+
+  geom_errorbarh(aes(xmin=L,xmax=U),height=0.3)+
+
+  theme_bw()+
+
+  labs(x='Fare',y='Has the passenger survived?')
+
+############################################################################
+
+ 
+
+############################################################################
+
+# Decission tree
+
+tree1 <- rpart(survival ~ Sex +
+
+                 Age +
+
+                 class +
+
+                 Fare +
+
+                 embarked,
+
+               data=data)
+
+ 
+
+rpart.plot(tree1,extra=4)
+```
+
